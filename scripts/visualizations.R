@@ -43,11 +43,11 @@ ggplot(data, aes(x = DATE, y = RPIT, color = RPIT)) +
   theme_minimal() 
 
 # Time vs PAYEMS
-ggplot(data, aes(x = DATE, y = RPIT, color = RPIT)) +
+ggplot(data, aes(x = DATE, y = PAYEMS, color = PAYEMS)) +
   geom_line() +
-  labs(title = "Time vs RPIT",
+  labs(title = "Time vs PAYEMS",
        x = "Time",
-       y = "RPIT") +
+       y = "PAYEMS") +
   theme_minimal() 
 
 # Time vs INDPRO
@@ -69,7 +69,7 @@ ggplot(data, aes(x = DATE, y = CORP, color = CORP)) +
 # Mention NA values starting 2013 (2013-2023 data not available)
 
 
-# Time vs CORP
+# Time vs HTS
 ggplot(data, aes(x = DATE, y = HTS, color = HTS)) +
   geom_line() +
   labs(title = "Time vs HTS",
@@ -77,7 +77,7 @@ ggplot(data, aes(x = DATE, y = HTS, color = HTS)) +
        y = "HTS") +
   theme_minimal() 
 
-# Time vs CORP
+# Time vs CPIAI
 ggplot(data, aes(x = DATE, y = CPIAI, color = CPIAI)) +
   geom_line() +
   labs(title = "Time vs CPIAI",

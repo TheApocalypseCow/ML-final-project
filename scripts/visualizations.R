@@ -89,7 +89,7 @@ ggplot(data, aes(x = DATE, y = CPIAI, color = CPIAI)) +
 
 dateless_data <- data[, !names(data) %in% c("DATE",)]
 correlation_matrix <- cor(dateless_data)
-ggcorrplot(correlation_matrix, type = "upper", outline.col = "white")
+ggcorrplot(correlation_matrix, type = "lower", outline.col = "white")
 
 # summary of dataset
 summary(data)

@@ -88,7 +88,7 @@ ggplot(data, aes(x = DATE, y = CPIAI, color = CPIAI)) +
 
 # Correlation graph of all factors except time 
 
-dateless_data <- data[, !names(data) %in% c("DATE",)]
+dateless_data <- data[, !names(data) %in% c("DATE", "USREC", "USREC1", "USREC3", "USREC6", "USREC12")]
 correlation_matrix <- cor(dateless_data)
 ggcorrplot(correlation_matrix, type = "lower", outline.col = "white")
 

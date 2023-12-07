@@ -1,0 +1,252 @@
+---
+title: "Untitled"
+author: "Coby Wilcox"
+date: "2023-12-05"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chu
+```{r}
+library(tidyverse)
+library(ISLR)
+library(glmnet)
+library(tree)
+library(maptree)
+library(randomForest)
+library(gbm)
+library(ROCR)
+library(class)
+library(FNN)
+library(glmnet)
+library(dplyr)
+library(tidyr)
+library(gbm)
+```
+```{r}
+setwd("C:/Users/cobyw/OneDrive/Documents/PSTAT131/final/data")
+data.raw <- read.csv("FINAL _RECESSION_PREDICTION.csv")
+glimpse(data.raw)
+```
+```{r}
+set.seed(333)
+cols = c("USREC","USREC1","USREC3","USREC6","USREC12")
+data.raw[cols] <- lapply(data.raw[cols], factor) # converts the last four columns to factors
+
+# creating training and test data
+
+test = sample(1:nrow(data.raw), 102)
+test.recc = data.raw[test,]
+train.recc = data.raw[-test,]
+train.recc[cols] <- lapply(train.recc[cols], factor)
+
+x.train = train.recc[2:11]
+
+x.test = test.recc[2:11]
+y.test.1m = test.recc["USREC1"]
+y.test.3m = test.recc["USREC3"]
+y.test.6m = test.recc["USREC6"]
+y.test.12m = test.recc["USREC12"]
+
+```
+
+```{r}
+# Standardizing Data
+# Some methods will be very scale dependent so for those ones we will use an entirely standardized dataset
+
+standard.data <- data.raw %>% mutate_at(c(4,5,6,7,10), ~(scale(.) %>% as.vector))
+standard.data
+matrix.data.1 <- model.matrix(USREC1~.-DATE-USREC-USREC3-USREC6-USREC12, standard.data)
+matrix.data.3 <- model.matrix(USREC3~.-DATE-USREC-USREC1-USREC6-USREC12, standard.data)
+matrix.data.6 <- model.matrix(USREC6~.-DATE-USREC-USREC3-USREC1-USREC12, standard.data)
+matrix.data.12 <- model.matrix(USREC12~.-DATE-USREC-USREC3-USREC6-USREC1, standard.data)
+
+test.recc.standard.1 = matrix.data.1[test,]
+train.recc.standard.1 = matrix.data.1[-test,]
+
+test.recc.standard.3 = matrix.data.3[test,]
+train.recc.standard.3 = matrix.data.3[-test,]
+
+test.recc.standard.6 = matrix.data.6[test,]
+train.recc.standard.6 = matrix.data.6[-test,]
+
+test.recc.standard.12 = matrix.data.12[test,]
+train.recc.standard.12 = matrix.data.12[-test,]
+
+y.train.1m = train.recc$USREC1
+y.train.3m = train.recc$USREC3
+y.train.6m = train.recc$USREC6
+y.train.12m = train.recc$USREC12
+
+x.test.standard = test.recc.standard[2:11]
+
+y.test.1m = test.recc$USREC1
+y.test.3m = test.recc$USREC3
+y.test.6m = test.recc$USREC6
+y.test.12m = test.recc$USREC12
+
+
+```
+
+
+
+```{r}
+#Ridge Regression
+
+lambda.list.ridge = 1000 * exp(seq(0, log(1e-5), length = 100))
+
+ridge_model_1 <- glmnet(train.recc.standard.1, y.train.1m, alpha=0,lamda=lambda.list.ridge, family = "binomial")
+ridge_model_3 <- glmnet(train.recc.standard.3, y.train.3m, alpha=0,lamda=lambda.list.ridge, family = "binomial")
+ridge_model_6 <- glmnet(train.recc.standard.6, y.train.6m, alpha=0,lamda=lambda.list.ridge, family = "binomial")
+ridge_model_12 <- glmnet(train.recc.standard.12, y.train.12m, alpha=0,lamda=lambda.list.ridge, family = "binomial")
+
+cv.out.ridge.1 <- cv.glmnet(train.recc.standard.1, y.train.1m, alpha=0,folds=5, family="binomial")
+cv.out.ridge.3 <- cv.glmnet(train.recc.standard.3, y.train.3m, alpha=0,folds=5, family="binomial")
+cv.out.ridge.6 <- cv.glmnet(train.recc.standard.6, y.train.6m, alpha=0,folds=5, family="binomial")
+cv.out.ridge.12 <- cv.glmnet(train.recc.standard.12, y.train.12m, alpha=0,folds=5, family="binomial")
+plot.new()
+plot(cv.out.ridge.1)
+
+bestlam.1 = cv.out.ridge.1$lambda.min
+bestlam.3 = cv.out.ridge.3$lambda.min
+bestlam.6 = cv.out.ridge.6$lambda.min
+bestlam.12 = cv.out.ridge.12$lambda.min
+```
+```{r}
+(ridge.model.bestlam <- predict(cv.out.ridge, type="coefficients",s=bestlam))
+```
+
+```{r}
+
+# 1 month
+print("1 month")
+ridge.prediction.test.1 <- predict(ridge_model_1, s=bestlam.1, newx = test.recc.standard.1, type="class")
+table(predicted=ridge.prediction.test.1, true=y.test.1m)
+
+ridge.prediction.train.1 <- predict(ridge_model_1, s=bestlam.1, newx = train.recc.standard.1,type="class")
+table(predicted=ridge.prediction.train.1, true=y.train.1m)
+# 3 month
+print("3 month")
+ridge.prediction.test.3 <- predict(ridge_model_3, s=bestlam.3, newx = test.recc.standard.3, type="class")
+table(predicted=ridge.prediction.test.3, true=y.test.3m)
+
+ridge.prediction.train.3 <- predict(ridge_model_3, s=bestlam.3, newx = train.recc.standard.3,type="class")
+table(predicted=ridge.prediction.train.3, true=y.train.3m)
+# 6 month
+print("6 month")
+ridge.prediction.test.6 <- predict(ridge_model_6, s=bestlam.6, newx = test.recc.standard.6, type="class")
+table(predicted=ridge.prediction.test.6, true=y.test.6m)
+
+ridge.prediction.train.6 <- predict(ridge_model_6, s=bestlam.6, newx = train.recc.standard.6,type="class")
+table(predicted=ridge.prediction.train.6, true=y.train.6m)
+```
+```{r}
+#nonstandardized tests
+matrix.data <- model.matrix(USREC1~.-DATE-USREC-USREC3-USREC6-USREC12, data.raw)
+
+test.recc.standard = matrix.data[test,]
+train.recc.standard = matrix.data[-test,]
+
+y.train.1m = train.recc$USREC1
+y.train.3m = train.recc$USREC3
+y.train.6m = data.raw[-test, ]$USREC6
+y.train.12m = data.raw[-test, ]$USREC12
+
+x.test.standard = test.recc.standard[2:11]
+
+y.test.1m = test.recc$USREC1
+y.test.3m = test.recc$USREC3
+y.test.6m = test.recc.standard["USREC6"]
+y.test.12m = test.recc.standard["USREC12"]
+
+```
+```{r}
+(ridge_model <- glmnet(train.recc.standard, y.train.1m, alpha=0,lamda=lambda.list.ridge, family = "binomial"))
+coef(ridge_model)
+
+(cv.out.ridge <- cv.glmnet(train.recc.standard, y.train.1m, alpha=0,folds=5, family="binomial"))
+plot.new()
+plot(cv.out.ridge)
+
+bestlam = cv.out.ridge$lambda.min
+bestlam
+```
+```{r}
+(ridge.model.bestlam <- predict(cv.out.ridge, type="coefficients",s=bestlam))
+
+ridge.prediction.test <- predict(ridge_model, s=bestlam, newx = test.recc.standard, type="class")
+table(predicted=ridge.prediction.test, true=y.test.1m)
+
+ridge.prediction.train <- predict(ridge_model, s=bestlam, newx = train.recc.standard,type="class")
+error_rate = sum(ridge.prediction.train != y.train.1m) / length(y.train.1m)
+
+table(predicted=ridge.prediction.train, true=y.train.1m)
+```
+LASSO PREDICTION
+
+
+```{r}
+lasso_model_1 <- glmnet(train.recc.standard.1, y.train.1m, alpha=1,lamda=lambda.list.ridge, family = "binomial")
+lasso_model_3 <- glmnet(train.recc.standard.3, y.train.3m, alpha=1,lamda=lambda.list.ridge, family = "binomial")
+lasso_model_6 <- glmnet(train.recc.standard.6, y.train.6m, alpha=1,lamda=lambda.list.ridge, family = "binomial")
+lasso_model_12 <- glmnet(train.recc.standard.12, y.train.12m, alpha=1,lamda=lambda.list.ridge, family = "binomial")
+
+cv.out.lasso.1 = cv.glmnet(train.recc.standard.1, y.train.1m, alpha = 1, family = "binomial")
+cv.out.lasso.3 = cv.glmnet(train.recc.standard.3, y.train.3m, alpha = 1, family = "binomial")
+cv.out.lasso.6 = cv.glmnet(train.recc.standard.6, y.train.6m, alpha = 1, family = "binomial")
+cv.out.lasso.12 = cv.glmnet(train.recc.standard.12, y.train.12m, alpha = 1, family = "binomial")
+
+plot(cv.out.lasso)
+abline(v = log(cv.out.lasso.1$lambda.min), col="red", lwd=3, lty=2)
+bestlam.1 = cv.out.lasso.1$lambda.min
+bestlam.3 = cv.out.lasso.3$lambda.min
+bestlam.6 = cv.out.lasso.6$lambda.min
+bestlam.12 = cv.out.lasso.12$lambda.min
+
+```
+```{r}
+(lasso.model.coef.1 <- predict(cv.out.lasso.1, type="coefficients",s=bestlam))
+(lasso.model.coef.3 <- predict(cv.out.lasso.3, type="coefficients",s=bestlam))
+(lasso.model.coef.6 <- predict(cv.out.lasso.6, type="coefficients",s=bestlam))
+(lasso.model.coef.12 <- predict(cv.out.lasso.12, type="coefficients",s=bestlam))
+```
+
+```{r}
+# 1 month
+print("1 month")
+lasso.prediction.test.1 <- predict(lasso_model_1, s=bestlam.1, newx = test.recc.standard.1, type="class")
+table(predicted=lasso.prediction.test.1, true=y.test.1m)
+
+lasso.prediction.train.1 <- predict(lasso_model_1, s=bestlam.1, newx = train.recc.standard.1, type="class")
+table(predicted=lasso.prediction.train.1, true=y.train.1m)
+# 3 month
+print("3 month")
+lasso.prediction.test.3 <- predict(lasso_model_3, s=bestlam.3, newx = test.recc.standard.3, type="class")
+table(predicted=lasso.prediction.test.3, true=y.test.3m)
+
+lasso.prediction.train.3 <- predict(lasso_model_3, s=bestlam.3, newx = train.recc.standard.3, type="class")
+table(predicted=lasso.prediction.train.3, true=y.train.3m)
+# 6 month
+print("6 month")
+lasso.prediction.test.6 <- predict(lasso_model_6, s=bestlam.6, newx = test.recc.standard.6, type="class")
+table(predicted=lasso.prediction.test.6, true=y.test.6m)
+
+lasso.prediction.train.6 <- predict(lasso_model_6, s=bestlam.6, newx = train.recc.standard.6, type="class")
+table(predicted=lasso.prediction.train.6, true=y.train.6m)
+# 1 month
+print("12 month")
+lasso.prediction.test.12 <- predict(lasso_model_12, s=bestlam.12, newx = test.recc.standard.12, type="class")
+table(predicted=lasso.prediction.test.1, true=y.test.1m)
+
+lasso.prediction.train.12 <- predict(lasso_model_12, s=bestlam.12, newx = train.recc.standard.12, type="class")
+table(predicted=lasso.prediction.train.12, true=y.train.12m)
+
+```
+

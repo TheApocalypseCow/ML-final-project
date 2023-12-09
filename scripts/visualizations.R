@@ -67,9 +67,6 @@ ggplot(data, aes(x = DATE, y = CORP, color = CORP)) +
        y = "CORP") +
   theme_minimal() 
 
-# Mention NA values starting 2013 (2013-2023 data not available)
-
-
 # Time vs HTS
 ggplot(data, aes(x = DATE, y = HTS, color = HTS)) +
   geom_line() +
@@ -85,6 +82,13 @@ ggplot(data, aes(x = DATE, y = CPIAI, color = CPIAI)) +
        x = "Time",
        y = "CPIAI") +
   theme_minimal() 
+
+ggplot(data, aes(x = DATE, y = USREC)) +
+  geom_line() +
+  labs(title = "Recession Time Series Plot",
+       x = "Date",
+       y = "Recession Indicator") +
+  theme_minimal()
 
 # Correlation graph of all factors except time 
 

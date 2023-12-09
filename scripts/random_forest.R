@@ -51,20 +51,53 @@ index <- sample(1:nrow(data), 0.7 * nrow(data))
 data_12.train <- data[index, ]
 data_12.test <- data[-index, ]
 
+#Random forest
+
+is.tree.data12 <- randomForest(USREC12~.-DATE -USREC -USREC1 -USREC3 -USREC6,
+                               data=data_12.train,importance = TRUE)
+print(is.tree.data12)
+
+importance_scores <- importance(is.tree.data12)
+ordered_variables <- importance_scores[order(importance_scores[, 1], decreasing = TRUE), , drop = FALSE]
+print(ordered_variables)
+
+# tuning hyper-parameters --> mtry: 
+# the number of variables to randomly sample as candidates of a split 
+rf.data12 = randomForest(USREC12 ~ .-DATE -USREC -USREC1 -USREC3 -USREC6, data=data_12.train,
+                           mtry=3, importance=TRUE)
+
+print(rf.data12)
+importance(rf.data12)
+
+yhat.rf = predict(rf.data12, newdata = data_12.test)
+test.rf.err = mean(yhat.rf != data_12.test$USREC12)
+test.rf.err
+
+err.pt.rf <- table(yhat.rf, data_12.test$USREC12)
+
+#TPR = TP/TP+FN (sensitivity)
+(rf.tpr <- err.pt.rf[2,2]/(err.pt.rf[2,2] + err.pt.rf[1,2]))
+
+#TNR = TN/TN + FP
+(rf.tnr <- err.pt.rf[1,1]/(err.pt.rf[1,1] + err.pt.rf[2,1]))
+
+#FPR = FP/FP + TN
+(rf.fpr <- err.pt.rf[2,1] /(err.pt.rf[2,1] + err.pt.rf[1,1]))
+
 #Boosted tree
 boosted.tree.data12 <- gbm(USREC12~.-DATE -USREC -USREC1 -USREC3 -USREC6,
                          distribution = "gaussian", data = data_12.train,
                          n.trees = 1000, shrinkage = 0.01)
 summary(boosted.tree.data12)
 
-#Importance Score method 
-is.tree.data12 <- randomForest(USREC12~.-DATE -USREC -USREC1 -USREC3 -USREC6,
-                               data=data_12.train, importance = TRUE)
-print(is.tree.data12)
 
-importance_scores <- importance(is.tree.data12)
-ordered_variables <- importance_scores[order(importance_scores[, 1], decreasing = TRUE), , drop = FALSE]
-print(ordered_variables)
+yhat.boost = predict(boosted.tree.data12, newdata = data_12.test,
+                     n.trees=1000, type = "response")
+
+yhat.boost
+yhat.boost = ifelse(yhat.boost > 0.5, 0, 1)
+test.boost.err = 1-mean(yhat.boost != ifelse(data_12.test$USREC12=="Yes",0,1))
+test.boost.err
 
 #---------------------------
 #USREC1 Random Forest Model 

@@ -25,6 +25,7 @@ train.recc = data.raw[-test,]
 
 # Standardizing Data
 # Lasso and Ridge will be very scale dependent so for some columns I will standardize the values
+# I only standardize the values with vastly different scales like income or population
 
 standard.data <- data.raw %>% mutate_at(c(4,5,6,7,10), ~(scale(.) %>% as.vector))
 

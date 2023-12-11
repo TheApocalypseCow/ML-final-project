@@ -1,5 +1,5 @@
 ---
-title: "Machine Learning Project"
+title: "Final Project"
 subtitle: ""
 author: "Rohan Anand, Coby Wilcox"
 date: last-modified
@@ -15,31 +15,68 @@ execute:
 ---
 
 ```{r}
-# load any other packages and read data here
+library(ggplot2)
+library(corrplot)
+library(reshape2)
+library(ggcorrplot)
 library(tidyverse)
-library(infer)
+library(ISLR)
+library(glmnet)
+library(tree)
+library(maptree)
 library(randomForest)
-library(tidymodels)
-library(modelr)
-library(yardstick)
-library(BaseSet)
+library(gbm)
+library(ROCR)
+library(dplyr)
 ```
 
 ## Abstract
 
-In this analysis, we seek to replicate and extend the findings of a previous research investigation focused on identifying serum biomarkers for Autism Spectrum Disorder (ASD) using a multi-faceted approach. Our methodology includes the application of Random Forest Trees, Multiple Testing methods, and analysis through Fuzzy Intersection to uncover predictive proteins associated with ASD. We also meticulously assess the prevalence and significance of outliers within the dataset, shedding light on their impact on data integrity. Additionally, we elucidate the necessity of log-transformation in preprocessing the data, ensuring that our analytical techniques are robust and reliable. This research aims to contribute to a deeper understanding of the potential biomarkers for ASD and offers insights into the significance of data preprocessing steps for accurate and meaningful results.
+This report investigates the predictive power of various economic indicators, including S&P500 data, Treasury Bond yields, unemployment rate, real personal income, industrial production, real GDP, and more, to develop a machine learning model for forecasting economic recessions within the next 12 months. The employed machine learning methods encompass logistic regression, ridge and lasso regression, random forests with and without boosting for ensemble-based learning, and neural networks, which capture complex relationships within the data. Inspired by contemporary economic trends, this analysis aims to employ machine learning techniques to enhance recession prediction accuracy and serve as a starting point to contribute valuable insights for informed decision-making.
 
 ## Dataset
 
-In this study, researchers sought to uncover serum biomarkers for Autism Spectrum Disorder (ASD) in boys using the SomaLogic SOMAScanTM platform and machine learning techniques. The study included 154 male pediatric subjects, with 76 in the ASD group (mean age 5.6 years) and 78 in the Typical Development (TD) group (mean age 5.7 years). Diagnostic criteria for ASD were based on clinical assessments using the Autism Diagnostic Observation Schedule (ADOS) and the Autism Diagnostic Interview--Revised (ADI-R), and overall ASD symptom severity was quantified through ADOS total scores. Proteomic data was obtained by analyzing 1,125 proteins in serum samples, which underwent preprocessing, including normalization and outlier handling. Machine learning methods, such as random forest (RF), t-tests, and correlation-based approaches, were employed to identify predictive proteins. The top 10 proteins from each method were examined, with 5 core proteins common to all three. A logistic regression model was used to evaluate the predictive power of these proteins. Additionally, a pathway enrichment analysis was performed to elucidate the biological processes associated with the optimal proteins. The impact of confounding factors, such as ethnicity, co-morbid conditions, age, and medication use, was investigated to enhance result reliability.
+This dataset encompasses a diverse array of critical economic indicators, providing a comprehensive view of the U.S. economic landscape. The dataset includes key metrics for the following from 1982 to 2023, updated in monthly intervals:
 
-## Summary of published analysis
++--------------------------------------------+----------------------------------+
+| \- **Consumer Price Index (CPI)**          | \- S&P 500 returns               |
++============================================+==================================+
+| \- 10-year & 3-month treasury bond yields  | \- National unemployment rate    |
++--------------------------------------------+----------------------------------+
+| -   Real personal income                   | \- Number of U.S. workers        |
++--------------------------------------------+----------------------------------+
+| -   Industrial Production                  | \- Real retail sales             |
++--------------------------------------------+----------------------------------+
+| -   AAA/BAA yield curve of corporate bonds | \- Heavy Truck Sales             |
++--------------------------------------------+----------------------------------+
 
-The paper titled "Blood Biomarker Discovery for Autism Spectrum Disorder: A Proteomic Analysis" investigates the quest for blood biomarkers to aid in the early diagnosis of autism spectrum disorder (ASD), a complex neurodevelopmental condition. ASD is characterized by social communication deficits and repetitive behaviors. With a lack of specific pharmacological therapies and significant clinical heterogeneity in ASD, identifying biomarkers has become a priority in autism research. The study utilized proteomic analysis of serum samples from 76 boys with ASD and 78 typically developing boys, aiming to identify proteins that could serve as potential blood-based markers for ASD.
+-   10-year and 3-month treasury bond yield rates
 
-The research conducted a comprehensive proteomic analysis using the SomaLogic SOMAScanTM assay, examining 1,125 proteins in total. It identified 86 downregulated and 52 upregulated proteins in ASD compared to typically developing controls. By combining three different algorithms, the study identified a panel of 9 proteins that exhibited a promising diagnostic accuracy for ASD, with an area under the curve (AUC) of 0.8599. These proteins were significantly associated with ASD severity, as measured by the Autism Diagnostic Observation Schedule (ADOS) total scores. The study integrated machine learning techniques such as Random Forests to establish this biomarker panel.
+-   National unemployment rate
 
-The identified proteins included core proteins such as IgD, suPAR, MAPK14, EPHB2, and DERM. These proteins are associated with immune function and inflammatory pathways, aligning with the existing literature suggesting immune system involvement in ASD. The study also found that neither ethnicity, age, nor medication use significantly affected the performance of the biomarker panel, making it a promising tool for early ASD diagnosis. However, the research acknowledges the need for a larger validation study to confirm the utility of this biomarker panel and addresses some limitations, such as the sample size and phenotypic heterogeneity of ASD. In summary, this study explores the potential of a blood-based biomarker panel, primarily consisting of immune-related proteins, to assist in the early identification of ASD in boys. The diagnostic accuracy and correlation with ASD severity make these proteins a promising avenue for further research and development of clinical tools for ASD diagnosis and intervention.
+-   Real personal income
+
+-   Number of U.S. workers
+
+-   Industrial Production
+
+-   Real retail sales
+
+-   AAA/BAA yield curve of corporate bonds
+
+-   Heavy Truck Sales
+
+-   Consumer Price Index (CPI)
+
+-   S&P 500 returns
+
+-   real GDP
+
+    Within this context, the government typically defines a recession as a sustained period of economic decline marked by a contraction in real GDP for two consecutive quarters. This widely accepted definition captures the essence of a recession, reflecting reduced economic activity, rising unemployment, and potential impacts on various sectors, all of which are crucial factors monitored within this dataset to better understand and predict economic cycles.
+
+For the purposes of this analysis, we have explicity
+
+## Methodology
 
 ```{mermaid}
 flowchart LR
@@ -54,329 +91,8 @@ flowchart LR
 
 Diagram of the workflow for the methodologies that we will explore in our analysis.
 
-## Findings
+## Results 
 
-### Impact of Preprocessing and Outliers
+## Further Considerations
 
-Task 1: What do you imagine is the reason for log-transforming the protein levels in `biomarker-raw.csv`?
-
-Before performing any transformations to the data set, we must examine the data and if necessary, carry out further explanatory analysis. We start off by looking at the distribution of raw values for the samples of the following proteins:
-
-```{r}
-set.seed(101422)
-var_names <- read_csv('/Users/rohananand/Documents/GitHub/module1-f23-module1-grp5/data/biomarker-raw.csv', 
-                      col_names = F, 
-                      n_max = 2, 
-                      col_select = -(1:2)) %>%
-  t() %>%
-  as_tibble() %>%
-  rename(name = V1, 
-         abbreviation = V2) %>%
-  na.omit()
-
-
-# Read the raw data
-biomarker_raw <- read_csv('/Users/rohananand/Documents/GitHub/module1-f23-module1-grp5/data/biomarker-raw.csv', 
-                          skip = 2,
-                          col_select = -2L,
-                          col_names = c('group', 
-                                        'empty',
-                                        pull(var_names, abbreviation),
-                                        'ados'),
-                          na = c('-', '')) %>%
-  filter(!is.na(group))
-
-num_columns <- ncol(biomarker_raw)
-columns_indices <- sample(2:num_columns, 5, replace = FALSE)
-columns <- biomarker_raw[, columns_indices]
-
-names(columns)
-```
-
-```{r}
-hist(columns$COMMD7, breaks = 20, main = "COMMD7", xlab = "Value",
-     ylab = "Frequency", col = "lightblue", border = "black")
-```
-
-Distribution is skewed right and has extreme outliers.
-
-```{r}
-hist(columns$`DC-SIGN`, breaks = 20, main = "DC-SIGN", xlab = "Value",
-     ylab = "Frequency", col = "lightblue", border = "black")
-```
-
-```{r}
-hist(columns$Marapsin, breaks = 20, main = "Marapsin", xlab = "Value",
-     ylab = "Frequency", col = "lightblue", border = "black")
-```
-
-The distributions of `Marpsin` and `DC-SIGN` are both skewed right.
-
-```{r}
-hist(columns$LRP1B, breaks = 20, main = "LRP1B", xlab = "Value",
-     ylab = "Frequency", col = "lightblue", border = "black")
-```
-
-Distribution seems to approximately follow a normal distribution with a mean value of 30970.
-
-```{r}
-hist(columns$ER, breaks = 20, main = "ER", xlab = "Value",
-     ylab = "Frequency", col = "lightblue", border = "black")
-```
-
-By looking at the plots above, we can clearly observe that there is severe rightward skewness in the distributions of `COMMD7`, `DC-SIGN`,and `Marapsin`. We would use a log-transformation to reduce the skewness, making the distribution of the data more normal. Furthermore, there appears to be outliers in some of the proteins, such as `COMMD7` and `ER`. A log-transformation could help reduce the influence of extreme outliers in the data.
-
-Task 2: Temporarily remove the outlier trimming from preprocessing and do some exploratory analysis of outlying values. Are there specific *subjects* (not values) that seem to be outliers? If so, are outliers more frequent in one group or the other? (Hint: consider tabluating the number of outlying values per subject.)
-
-Outliers are data points that deviate significantly from the rest of the data in a dataset. They may be indicative of errors in data collection, measurement, or data entry. Furthermore, outliers can significantly affect summary statistics like the mean, median, and standard deviation. If not accounted for, they can distort the interpretation of the data. For example, the mean can be heavily influenced by extreme values, leading to an inaccurate representation of the central tendency. For these reasons, it is important to examine the outliers and consider the potential reasons that they might be prevalent in our data. We start by filtering the dataset for outlying values and examining the summary statistics.
-
-```{r}
-set.seed(1234)
-biomarker_clean <- read_csv('/Users/rohananand/Documents/GitHub/module1-f23-module1-grp5/data/biomarker-raw.csv', 
-                            skip = 2,
-                            col_select = -2L,
-                            col_names = c('group', 
-                                          'empty',
-                                          pull(var_names, abbreviation),
-                                          'ados'),
-                            na = c('-', '')) %>%
-  filter(!is.na(group)) %>%
-  # log transform, center and scale (without trimming)
-  mutate(across(.cols = -c(group, ados), 
-                ~ scale(log10(.x))[, 1])) %>%
-  # reorder columns
-  select(group, ados, everything())
-
-#Calculate outliiers by subject
-
-outlier_count_per_subject <- biomarker_clean %>%
-  group_by(group) %>%
-  summarize(across(everything(), ~ sum(abs(.x) > 3, na.rm = TRUE))) %>%
-  pivot_longer(cols = -group, names_to = "variable", values_to = "outlier_count")
-
-# Summary statistics of the number of outlying values per subject
-summary(outlier_count_per_subject)
-```
-
-As we can see from the summary statistics, the majority of our data only has one outlier (the median and third quartile values are both one indicating that 75% of the data has one outlier or less and the mean value is 0.93). However, the max number of outliers in the dataset is 76 which is much greater than the mean and third quartile values. This begs the question of whether there is a reason for a certain group to have this many outliers. We start by visualizing the number of outlying values by group.
-
-```{r}
-# Visualize the number of outlying values by group
-outlier_count_per_subject %>%
-  ggplot(aes(x = group, y = outlier_count, fill = group)) +
-  geom_boxplot() +
-  labs(title = "Number of Outlying Values by Group", x = "Group", y = "Outlier Count")
-
-# We can see that the above splits the groups into ASD and TD but we are more interested in seeing the
-# proteins with the most outliers
-```
-
-We can see from the visualization above that the data is split into the ASD group and TD group. However, we are more interested in seeing whether a certain protein has a high number of outliers. The next step would be to examine the specific subjects with a high number of outliers.
-
-```{r}
-# If you want to identify specific subjects with a high number of outliers
-high_outlier_subjects <- outlier_count_per_subject %>%
-  arrange(desc(outlier_count)) %>%
-  head(10)
-# View the subjects with the highest number of outliers
-print(high_outlier_subjects)
-```
-
-From the table above, we can see that 9 out of the top 10 subjects with the most outliers are from the ASD group and the subject with the most outliers is `ados`. Furthermore, the majority of top outlier variables fall between 4-6 outliers, with the 76 outliers for `ados` being the exception. This conceptually makes sense since the mean number of outliers was 0.93 and the median number of outliers was 1. We proceed by looking at the spread of all outliers in the protein:
-
-```{r}
-# Find the proteins with the most outliers
-top_outlier_variables <- outlier_count_per_subject %>%
-  group_by(variable) %>%
-  summarize(total_outliers = sum(outlier_count)) %>%
-  arrange(desc(total_outliers)) %>%
-  head(5)  # You can change the number to select more or fewer variables
-
-# Filter the biomarker_clean dataset to include only the selected variables
-biomarker_filtered <- biomarker_clean %>%
-  select(group, ados, one_of(top_outlier_variables$variable))
-
-# Visualize the distribution of outlying values for the selected variables
-biomarker_filtered %>%
-  pivot_longer(cols = -c(group, ados), names_to = "variable", values_to = "value") %>%
-  ggplot(aes(x = variable, y = value, fill = group)) +
-  geom_boxplot() +
-  labs(title = "Number of Outlying Values by Top Outlier Variables", x = "Variable (Biomarker)", y = "Outlier Count") +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1) )
-```
-
-When we examine the number of outlying values by top outlier variables, we get the following diagram. For `C1q`, it seems that there are roughly an equal number of outliers above and below the mean. The same cannot be said for the remaining variables. For instance, `Coagulation Factor IXab` has all its outliers below the mean and `GM-CSF` and `TLR2` have outliers above the mean.
-
-### Methodological variations
-
-Task 3:
-
-\(1\) Repeat the analysis but carry out the entire selection procedure on a training partition -- in other words, set aside some testing data at the very beginning and don't use it until you are evaluating accuracy at the very end.
-
-```{r}
-trim <- function(x, .at){
-  x[abs(x) > .at] <- sign(x[abs(x) > .at])*.at
-  return(x)
-}
-
-biomarker_clean <- read_csv('/Users/rohananand/Documents/GitHub/module1-f23-module1-grp5/data/biomarker-raw.csv', 
-                            skip = 2,
-                            col_select = -2L,
-                            col_names = c('group', 
-                                          'empty',
-                                          pull(var_names, abbreviation),
-                                          'ados'),
-                            na = c('-', '')) %>%
-  filter(!is.na(group)) %>%
-  # log transform, center and scale, and trim
-  mutate(across(.cols = -c(group, ados), 
-                ~ trim(scale(log10(.x))[, 1], .at = 3))) %>%
-  # reorder columns
-  select(group, ados, everything())
-
-biomarker_split <- initial_split(biomarker_clean, strata = group, prop = 0.8)
-biomarker_train <- training(biomarker_split)
-biomarker_test <- testing(biomarker_split)
-```
-
-By splitting the data into training and testing sets and using the strata argument, we can ensure that the model is trained on a representative sample of the data and that it is able to generalize well to new, unseen data. In this case, the strata argument was used to the initial_split function. This argument ensures that the training and testing data have the same proportion of TD boys.
-
-\(2\) Choose a larger number (more than ten) of top predictive proteins using each selection method.
-
-```{r}
-# function to compute tests
-test_fn <- function(.df){
-  t_test(.df, 
-         formula = level ~ group,
-         order = c('ASD', 'TD'),
-         alternative = 'two-sided',
-         var.equal = F)
-}
-
-ttests_out <- biomarker_train %>%
-  # drop ADOS score
-  select(-ados) %>%
-  # arrange in long format
-  pivot_longer(-group, 
-               names_to = 'protein', 
-               values_to = 'level') %>%
-  # nest by protein
-  nest(data = c(level, group)) %>% 
-  # compute t tests
-  mutate(ttest = map(data, test_fn)) %>%
-  unnest(ttest) %>%
-  # sort by p-value
-  arrange(p_value) %>%
-  # multiple testing correction
-  mutate(m = n(),
-         hm = log(m) + 1/(2*m) - digamma(1),
-         rank = row_number(),
-         p.adj = m*hm*p_value/rank)
-
-# select significant proteins for fuzzy interaction, added p-value
-proteins_s1 <- ttests_out %>%
-  slice_min(p.adj, n = 20) %>%
-  pull(protein, p.adj)
-
-
-
-## RANDOM FOREST
-# increase the number of protein from 10 to 20
-##################
-
-# store predictors and response separately
-predictors <- biomarker_train %>%
-  select(-c(group, ados))
-
-response <- biomarker_train %>% pull(group) %>% factor()
-
-# fit RF
-set.seed(101422)
-rf_out <- randomForest(x = predictors, 
-                       y = response, 
-                       ntree = 1000, 
-                       importance = T)
-```
-
-Multiple Testing and Random Forest: In section 3.2 of the code, we used two different methods to identify a set of 20 proteins that are important for predicting a certain condition: multiple testing and random forest.
-
-Multiple Testing: The multiple testing method involved first performing t-tests to compare the levels of each protein between two groups. The results of the t-tests were then adjusted for multiple testing. Finally, the 20 proteins with the smallest adjusted p-values were selected.
-
-Random Forest Analysis: The predictors (protein features) and the response (group) are separated. A Random Forest model is fitted to the training data using the randomForest function, with 1000 trees and importance measures computed.
-
-Error Checking:
-
-The code checks for errors in the Random Forest model by examining the confusion matrix (classification performance) using rf_out\$confusion.
-
-```{r}
-# check errors
-rf_out$confusion
-
-# compute importance scores for fuzzy interaction, added MeanDecreaseGini
-proteins_s2 <- rf_out$importance %>% 
-  as_tibble() %>%
-  mutate(protein = rownames(rf_out$importance)) %>%
-  slice_max(MeanDecreaseGini, n = 20) %>%
-  pull(protein, MeanDecreaseGini)
-```
-
-Importance Scores:
-
-The importance scores for each protein are computed based on the Mean Decrease in Gini Impurity. The top 20 proteins with the highest MeanDecreaseGini scores are selected and stored in proteins_s2.
-
-For multiple testing method: The new set of 20 proteins are: `DERM`, `Calcineurin`, `MAPK2`, `FSTL1`, `CXCL16, soluble`, `RELT`, `Calcineurin`, `gp130, soluble`, `IgD`, `MRC2`, `MAPK14`, `C1QR1`, `aldolase A`, `Notch 1`, `M2-PK`, `MATN2`, `TSP4`, `SLIK1`, `Coagulation Factor IX`, `DAF`, `ALCAM`. The set of 10 proteins from inclass-analysis are: `DERM`, `RELT`, `Calcineurin`, `C1QR1`, `MRC2`, `IgD`, `CXCL16, soluble`, `PTN`, `FSTL1`, `Cadherin-5` 
-
-For random forest method: The new set of 20 proteins are: `DERM`, `IgD`, `ERBB1`, `eIF-4H`, `Calcineurin`, `MAPK14`, `MAPK2`, `gp130, soluble`, `Notch 1`, `TSP4`, `CK-MB`, `MMP-2`, `Coagulation Factor IX`, `CSK`, `Caspase-3`, `ALCAM`, `M2-PK`, `SH21A`, `FSTL1`, `CXCL16, soluble`. The set of 10 preoteins from inclass-analysis are: `DERM`, `IgD`, `TGF-b R III`, `MAPK14`, `FSTL1`, `RELT`, `eIF-4H`, `M2-PK`, `SOST`, `ALCAM` 
-
-\(3\) Use a fuzzy intersection instead of a hard intersection to combine the sets of top predictive proteins across selection methods.
-
-In order to perform fuzzy intersection, we first need to assign a membership, which is a significance score to each of the proteins in the two sets according to their significance. For the set of protein chosen by the multiple testing, the p-value is the criteria that we use to perform the variable selection. Since we know that the smaller the p-value, the more significant the variable, so we first standardize the p-value and then use 1-(p-value) to assign the significance score to this set of proteins. For the set of protein chosen y random forest, the mean decrease Gini score is the criteria for choosing the significant proteins, so we just directly standardize the Gini score to be the significance score for this set of protein. After doing the whole process, we were able to find the fuzzy intersection of the two set of significant protein, which will be the input for the logistic regression.
-
-The set of proteins chosen by the fuzzy intersection are: `Derm`, `Calcineurin`, `MAPK2`, `FSTL1`, `CXCL16, soluble`, `gp130, soluble`, `IgD`, `MAPK14`, `Notch 1`, `M2-PK`, `TSP4`, `Coagulation Factor IX`, `ALCAM`.
-
-### Improved classifier
-
-Task 4: Method of Choice - Logistic Regression
-
-Now that we have the proteins contained in our fuzzy intersection of the two sets, we want to find either a simpler panel that achieves comparable classification accuracy or an alternative panel that achieves improved classification accuracy. In the in-class analysis, the final panel contained the proteins "DERM", "RELT", "IgD", and "FSTL1". This panel of proteins resulted in a classification accuracy of 0.753. First, I will use the proteins_sstar from part 3 and sort them by fuzzy score for assessment.
-
-From looking at this set of proteins, "DERM" and "IgD" have the highest fuzzy score, with "Calcineurin" and "MAPK14" having the next highest. Since the fuzzy scores below these top 4 are less than 0.20, we will attempt to create a simpler panel than the 4 proteins used for the in-class analysis, since the remaining proteins likely will not be useful in our predictions.As such, we will remove all but the top 3 proteins with the highest fuzzy scores.
-
-```{r}
-proteins_sstar_sorted = proteins_sstar[order(proteins_sstar$fuzzy, decreasing=TRUE),]
-print(proteins_sstar_sorted)
-```
-
-Our new subset of proteins include `Derm`, `IgD`, and `Calcineurin`
-
-```{r}
-proteins_sstar_subset = head(proteins_sstar_sorted, 4)
-print(proteins_sstar_subset)
-```
-
-```{r}
-# training the model
-fit <- glm(class ~ ., 
-           data = biomarker_sstar_train, 
-           family = 'binomial')
-
-summary(fit)
-```
-
-Here are the summary statistics after training the model.
-
-```{r}
-class_metrics <- metric_set(sensitivity, 
-                            specificity, 
-                            accuracy,
-                            roc_auc)
-
-biomarker_sstar_test %>%
-  add_predictions(fit, type = 'response') %>%
-  mutate(est = as.factor(pred > 0.5), tr_c = as.factor(class)) %>%
-  class_metrics(estimate = est,
-                truth = tr_c, pred,
-                event_level = 'second')
-```
-
-As we can see, the accuracy of this panel of three proteins is 0.688. Our panel has two similar proteins as compared to the in-class panel, "DERM" and "IgD", as well as an additional protein "Calcineurin". Our accuracy of this panel is less than the in-class accuracy of 0.753, but this difference is not significant enough to disregard our panel, as these accuracies are comparable. Additionally, if our panel were to be expanded to 4 proteins (including "MAPK14"), the accuracy gets closer to 0.753 with an accuracy of 0.719. Thus, using the proteins from our fuzzy intersection in a equalivelant or simpler panel yields similar results to that of the in-class assignment. The way the data is split into training and testing sets could have affected our result. A different proportion for the split could have impacted our testing accuracy, or even the randomly selected data assigned to the splits. As such, with similar accuracies, our simpler panel performs similarly to the in-class panel.
+Mention Time Series Analysis

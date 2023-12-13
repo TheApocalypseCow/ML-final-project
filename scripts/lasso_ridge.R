@@ -11,7 +11,7 @@ library(caret)
 data.raw <- read.csv("data/final_dataset_cleaned.csv")
 
 # adjust DATE formatting
-data.raw$DATE <- as.POSIXct(data$DATE, format = "%m/%d/%Y")
+data.raw$DATE <- as.POSIXct(data.raw$DATE, format = "%m/%d/%Y")
 
 # convert USREC columns to "Yes" or "No" factors
 data.raw <- data.raw %>%
@@ -243,3 +243,13 @@ confusionMatrix(lasso.prediction.train.12, y.train.12m, positive = "Yes")
 print("12 month Test")
 lasso.prediction.test.12 <- factor(predict(lasso_model_12, s=bestlam.12, newx = test.recc.standard.12, type="class"))
 confusionMatrix(lasso.prediction.test.12, y.test.12m, positive = "Yes")
+
+#Final Coefficient Estimates
+
+final.cv.out.lasso.1 <- cv.glmnet(matrix.data.1, data.raw$USREC1, alpha = 1, family = "binomial")
+bestlam.1 = final.cv.out.lasso.1$lambda.min
+(final.lasso.model.coef.1 <- predict(final.cv.out.lasso.1, type="coefficients",s=bestlam.1))
+
+final.cv.out.lasso.12 <- cv.glmnet(matrix.data.12, data.raw$USREC12, alpha = 1, family = "binomial")
+bestlam.12 = final.cv.out.lasso.12$lambda.min
+(final.lasso.model.coef.12 <- predict(final.cv.out.lasso.12, type="coefficients",s=bestlam.12))

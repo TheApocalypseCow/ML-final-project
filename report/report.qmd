@@ -1,5 +1,5 @@
 ---
-title: "Final Project"
+title: "Machine Learning Final Project"
 subtitle: ""
 author: "Rohan Anand, Coby Wilcox"
 date: last-modified
@@ -28,70 +28,269 @@ library(randomForest)
 library(gbm)
 library(ROCR)
 library(dplyr)
+
+setwd("/Users/rohananand/Documents/GitHub/ML-final-project")
+data <- read.csv("data/final_dataset_cleaned.csv")
+
+# adjust DATE formatting
+data$DATE <- as.POSIXct(data$DATE, format = "%m/%d/%Y")
 ```
 
-## Abstract
+## Objective
 
-This report investigates the predictive power of various economic indicators, including S&P500 data, Treasury Bond yields, unemployment rate, real personal income, industrial production, real GDP, and more, to develop a machine learning model for forecasting economic recessions within the next 12 months. The employed machine learning methods encompass logistic regression, ridge and lasso regression, random forests with and without boosting for ensemble-based learning, and neural networks, which capture complex relationships within the data. Inspired by contemporary economic trends, this analysis aims to employ machine learning techniques to enhance recession prediction accuracy and serve as a starting point to contribute valuable insights for informed decision-making.
-
-## Dataset
-
-This dataset encompasses a diverse array of critical economic indicators, providing a comprehensive view of the U.S. economic landscape. The dataset includes key metrics for the following from 1982 to 2023, updated in monthly intervals:
-
-+--------------------------------------------+----------------------------------+
-| \- **Consumer Price Index (CPI)**          | \- S&P 500 returns               |
-+============================================+==================================+
-| \- 10-year & 3-month treasury bond yields  | \- National unemployment rate    |
-+--------------------------------------------+----------------------------------+
-| -   Real personal income                   | \- Number of U.S. workers        |
-+--------------------------------------------+----------------------------------+
-| -   Industrial Production                  | \- Real retail sales             |
-+--------------------------------------------+----------------------------------+
-| -   AAA/BAA yield curve of corporate bonds | \- Heavy Truck Sales             |
-+--------------------------------------------+----------------------------------+
-
--   10-year and 3-month treasury bond yield rates
-
--   National unemployment rate
-
--   Real personal income
-
--   Number of U.S. workers
-
--   Industrial Production
-
--   Real retail sales
-
--   AAA/BAA yield curve of corporate bonds
-
--   Heavy Truck Sales
-
--   Consumer Price Index (CPI)
-
--   S&P 500 returns
-
--   real GDP
-
-    Within this context, the government typically defines a recession as a sustained period of economic decline marked by a contraction in real GDP for two consecutive quarters. This widely accepted definition captures the essence of a recession, reflecting reduced economic activity, rising unemployment, and potential impacts on various sectors, all of which are crucial factors monitored within this dataset to better understand and predict economic cycles.
-
-For the purposes of this analysis, we have explicity
+This report investigates the predictive power of various economic indicators, including S&P500 data, Treasury Bond yields, unemployment rate, real personal income, industrial production, real GDP, and more, to develop a machine learning model for forecasting economic recessions **within the next 12 months**. The employed machine learning methods encompass **logistic regression**, **ridge and lasso regression**, **random forests** with and without boosting for ensemble-based learning, and **neural networks**, which capture complex relationships within the data. Inspired by contemporary economic trends, this analysis aims to employ machine learning techniques to enhance recession prediction accuracy and serve as a starting point to contribute valuable insights for informed decision-making.
 
 ## Methodology
 
 ```{mermaid}
 flowchart LR
-  A[Preprocessed Data] --> B(Evaluate Outliers)
-  B --> C{Log_transformation}
-  C --> D[Multiple Testing]
-  C --> E[Random Forests]
-  D --> F[Fuzzy Transformation]
-  E --> F
-  F --> G[Logistic Regression]
+  A[Preprocessed Data] --> B(Exploratory Data Analysis)
+  B --> C[Logistic Regression]
+  B --> D[Ridge and Lasso Regression]
+  B --> E[Random Forests]
+  B --> F[Neural Networks]
+  C --> G[Evaluate Performance]
+  D --> G
+  E --> G
+  F --> G
 ```
 
-Diagram of the workflow for the methodologies that we will explore in our analysis.
+Diagram of the workflow for the methodologies that we will explore in our analysis
+
+## Dataset
+
+This dataset encompasses a diverse array of critical economic indicators, providing a comprehensive view of the U.S. economic landscape. The dataset includes 502 observations for the following from 1982 to 2023, updated in monthly intervals:
+
++--------------------------------------------+----------------------------------+
+| -   10-year & 3-month treasury bond yields | -   National unemployment rate   |
++--------------------------------------------+----------------------------------+
+| -   Real personal income                   | -   Number of U.S. workers       |
++--------------------------------------------+----------------------------------+
+| -   Industrial Production                  | -   Real retail sales            |
++--------------------------------------------+----------------------------------+
+| -   AAA/BAA yield curve of corporate bonds | -   Heavy Truck Sales            |
++--------------------------------------------+----------------------------------+
+| -   Consumer Price Index (CPI)             | -   S&P 500 Returns              |
++--------------------------------------------+----------------------------------+
+
+For the purposes of our analysis, we must explicity define what constitutes a recession. The U.S. government typically defines a recession as a sustained period of economic decline marked by a contraction in real GDP for two consecutive quarters (\~6 months). This widely accepted definition captures the essence of a recession, reflecting reduced economic activity, rising unemployment, and potential impacts on various sectors, all of which are crucial factors monitored within this dataset to better understand and predict economic cycles. Thus, we will stick with the government definition of a recession.
+
+## Exploratory Data Analysis
+
+In the following section, we conduct a thorough exploratory data analysis (EDA) of key economic indicators, examining their relationships and seeking insights into trends and patterns. The objective is to gain a comprehensive understanding of the purpose of these indicators, how they have evolved over time, and to uncover potential correlations and influential factors.
+
+**10-Year Treasury Maturity Minus 3-Month Treasury Constant Maturity (T10Y3M):** The difference between the 10 year treasury rate and the 3 month treasury rate.  Historically shown to be one of the most accurate indicators of an incoming recession. The flattening and especially the inverting (the 3 month rate being higher than the 10 year rate) is the go-to precursor to a recession. The New York Fed uses the rate in a model to predict recessions 2 to 6 quarters ahead.
+
+```{r}
+# Time vs T10Y3M
+ggplot(data, aes(x = DATE, y = T10Y3M, color = T10Y3M)) +
+  geom_line() +
+  labs(title = "Time vs T10Y3M",
+       x = "Time",
+       y = "T10Y3M") +
+  theme_minimal() 
+
+```
+
+**National Unemployment Rate (UNRATE):** The unemployment rate represents the number of unemployed as a percentage of the labor force. Labor force data are restricted to people 16 years of age and older, who currently reside in 1 of the 50 states or the District of Columbia, who do not reside in institutions (e.g., penal and mental facilities, homes for the aged), and who are not on active duty in the Armed Forces. Has been shown in other studies to be a reliable predictor of recessions.
+
+```{r}
+# Time vs UNRATE
+ggplot(data, aes(x = DATE, y = UNRATE, color = UNRATE)) +
+  geom_line() +
+  labs(title = "Time vs UNRATE",
+       x = "Time",
+       y = "UNRATE") +
+  theme_minimal() 
+```
+
+**Real Personal Income Excluding Transfers (RPIT):** Real Personal Income Excluding Transfers is an economic indicator that measures the income received by individuals and households from all sources, excluding government transfers. Government transfers include social welfare payments such as unemployment benefits, Social Security, and other forms of assistance. The "real" aspect of Real Personal Income refers to the fact that the data is adjusted for inflation, providing a more accurate measure of changes in purchasing power over time. Adjusting for inflation allows economists and policymakers to compare income levels across different time periods in terms of constant purchasing power.
+
+```{r}
+# Time vs RPIT
+ggplot(data, aes(x = DATE, y = RPIT, color = RPIT)) +
+  geom_line() +
+  labs(title = "Time vs RPIT",
+       x = "Time",
+       y = "RPIT") +
+  theme_minimal() 
+```
+
+**All Employees: Total Nonfarm (PAYEMS):** commonly known as Total Nonfarm Payroll, is a measure of the number of U.S. workers in the economy that excludes proprietors, private household employees, unpaid volunteers, farm employees, and the unincorporated self-employed. This measure accounts for approximately 80 percent of the workers who contribute to Gross Domestic Product (GDP). This measure provides useful insights into the current economic situation because it can represent the number of jobs added or lost in an economy. Generally, the U.S. labor force and levels of employment and unemployment are subject to fluctuations due to seasonal changes in weather, major holidays, and the opening and closing of schools. The Bureau of Labor Statistics (BLS) adjusts the data to offset the seasonal effects to show non-seasonal changes.
+
+```{r}
+# Time vs PAYEMS
+ggplot(data, aes(x = DATE, y = PAYEMS, color = PAYEMS)) +
+  geom_line() +
+  labs(title = "Time vs PAYEMS",
+       x = "Time",
+       y = "PAYEMS") +
+  theme_minimal() 
+```
+
+**Industrial Production (INDPRO):** Industrial production measures the output of goods produced or mined in the U.S. While the manufacturing sector only makes up less than 20% of the economy, this indicator is closely watched as it is highly sensitive and quick to react to changes in the business cycle. The Federal Reserve's monthly index of industrial production and the related capacity indexes and capacity utilization rates cover manufacturing, mining, and electric and gas utilities. The industrial sector, together with construction, accounts for the bulk of the variation in national output over the course of the business cycle. The industrial detail provided by these measures helps illuminate structural developments in the economy.
+
+```{r}
+# Time vs INDPRO
+ggplot(data, aes(x = DATE, y = INDPRO, color = INDPRO)) +
+  geom_line() +
+  labs(title = "Time vs INDPRO",
+       x = "Time",
+       y = "INDPRO") +
+  theme_minimal() 
+```
+
+**Real Retail Sales (RRS):** This factor is found by splicing two different statistics recorded by the US Census Bureau. Retail Sales (RETAIL), a combined value of sales and end of month inventory by stores across the US, was discontinued in 2001, and Advanced Retail Sales: Retail Trade and Food Services (RSAFS) started in 1992 and continues to this day. The difference between the two statistics seems quite marginal, with RSAFS having more advanced statistical procedures being done to it. To account for seasonal changes in consumer spending, the splice should also be deflated by the seasonally adjusted Consumer Price Index.
+
+```{r}
+# Time vs RSAFS
+ggplot(data, aes(x = DATE, y = RSAFS, color = RSAFS)) +
+  geom_line() +
+  labs(title = "Time vs RSAFS",
+       x = "Time",
+       y = "RSAFS") +
+  theme_minimal() 
+```
+
+**Corporate Bond AAA/BAA Yield Curve (CORP):** To give accurate estimates at the creditworthiness of corporate bonds companies like Moody, Standard and Poor\'s, and Fitch have developed rating systems. The systems can differ in small ways but generally the highest rated companies have AAA, then the next highest have AA, then A and BAA or BBB and so on. This dataset will specifically use Moody\'s ratings and display the difference between the AAA rated bonds and BAA similar to the system in T10Y3M. Though the relationship found between CORP and recessions is quite different to T10Y3M, with AAA ratings being too high compared to BAA ratings being associated with a likely recession as opposed to them being rated too low. 
+
+```{r}
+# Time vs CORP
+ggplot(data, aes(x = DATE, y = CORP, color = CORP)) +
+  geom_line() +
+  labs(title = "Time vs CORP",
+       x = "Time",
+       y = "CORP") +
+  theme_minimal() 
+```
+
+**Heavy Truck Sales (HTS):** Heavy truck sales have been known to be a surprisingly good predictor of US recessions. Since 1973 there have been 7 recessions and according to Joseph Calhoun of Seeking Alpha, heavy trucks have been a predictor for every single one of them. The logic is that during an economic boom people will want to buy heavy trucks to transport goods to make more money, but once money gets tight commerce slows, and heavy truck sales will begin to fall.
+
+```{r}
+# Time vs HTS
+ggplot(data, aes(x = DATE, y = HTS, color = HTS)) +
+  geom_line() +
+  labs(title = "Time vs HTS",
+       x = "Time",
+       y = "HTS") +
+  theme_minimal() 
+```
+
+**Consumer Price Index: All Items: Total For United States (CPIAI) -** A standardized growth rate of consumer prices for all items bought within the United States. This dataset is not seasonally adjusted. This data has also not historically shown to be a predictor of recessions. The purpose of this predictor is mainly as a dummy variable.
+
+```{r}
+# Time vs CPIAI
+ggplot(data, aes(x = DATE, y = CPIAI, color = CPIAI)) +
+  geom_line() +
+  labs(title = "Time vs CPIAI",
+       x = "Time",
+       y = "CPIAI") +
+  theme_minimal() 
+```
+
+**Correlation Plot:**
+
+```{r}
+dateless_data <- data[, !names(data) %in% c("DATE", "USREC", "USREC1", "USREC3", "USREC6", "USREC12")]
+correlation_matrix <- cor(dateless_data)
+ggcorrplot(correlation_matrix, type = "lower", outline.col = "white")
+```
 
 ## Results 
+
+**Logistic Regression:** We implement a logistic regression as a benchmark method. In general, a logistic regression may struggle in predicting recessions due to its linear assumptions, limited ability to capture the complex and nonlinear relationships inherent in economic data, challenges with feature independence and changing feature importance over time, sensitivity to non-stationarity in economic variables, potential bias in handling imbalanced data where recessions are infrequent, and the difficulty in satisfying model assumptions. Additionally, logistic regression may not account for unobserved external factors influencing recessions, and its performance can be hindered by noisy or error-prone economic data. To improve recession prediction, we consider more sophisticated modeling approaches. The summary statistics for the logistic regression model implemented are below. Note that the logistic regression is able to pick up the majority of the important predictors.
+
+```{r}
+library(tidyverse)
+library(ISLR)
+library(glmnet)
+library(tree)
+library(maptree)
+library(randomForest)
+library(gbm)
+library(ROCR)
+library(dplyr)
+
+setwd("/Users/rohananand/Documents/GitHub/ML-final-project")
+data <- read.csv("data/final_dataset_cleaned.csv")
+
+# adjust DATE formatting
+data$DATE <- as.POSIXct(data$DATE, format = "%m/%d/%Y")
+
+# convert USREC columns to "Yes" or "No" factors
+data <- data %>%
+  mutate_at(vars(USREC1, USREC3, USREC6, USREC12), ~factor(ifelse(. == 1, "Yes", "No")))
+
+#implement a logistic regression as a benchmark method 
+logistic_data_12 <- glm(USREC12~ .-DATE -USREC -USREC1 -USREC3 -USREC6,data=data,family = "binomial")
+summary(logistic_data_12)
+```
+
+**Decision Trees:** We start off by constructing the most basic building block of a random forest: the decision tree. The primary advantage of decision trees is its high interpretability. The decision tree systematically partitions the dataset of economic indicators based on feature values to create a predictive model, recursively splitting the data into subsets by identifying the most informative features at each node, leading to a tree-like structure that represents decision rules for classifying or predicting outcomes.
+
+```{r}
+set.seed(123)
+
+tree.data_12 = tree(USREC12 ~.-DATE -USREC -USREC1 -USREC3 -USREC6, data = data)
+cv.data_12 <- cv.tree(tree.data_12, FUN=prune.misclass, K=5)
+best_size <- min(cv.data_12$size[cv.data_12$dev == min(cv.data_12$dev)])
+best_tree12.cv = prune.misclass (tree.data_12, best=best_size)
+
+plot(best_tree12.cv)
+text(best_tree12.cv, pretty=0, col = "blue", cex = .5)
+title("Best Tree (of Size 11) for USREC12")
+```
+
+As you can see above, the tree data structure allows us to easily determine classification of whether a recession is imminent based on the criteria of the predictors. To find the tree with the optimal size for our dataset, we used cross-validation and found the with the best size is 11.
+
+**Random Forests**:
+
+```{r}
+#USREC12 Random Forest Model
+# Create training and test datasets
+index <- sample(1:nrow(data), 0.7 * nrow(data))
+data_12.train <- data[index, ]
+data_12.test <- data[-index, ]
+
+# tuning hyper-parameters --> mtry: 
+# the number of variables to randomly sample as candidates of a split 
+rf.data12 = randomForest(USREC12 ~ .-DATE -USREC -USREC1 -USREC3 -USREC6, data=data_12.train,
+                           mtry=3, importance=TRUE)
+
+importance_scores <- importance(rf.data12)
+ordered_variables <- importance_scores[order(importance_scores[, 1], decreasing = TRUE), , drop = FALSE]
+print(ordered_variables)
+
+yhat.rf = predict(rf.data12, newdata = data_12.test)
+test.rf.err = mean(yhat.rf != data_12.test$USREC12)
+test.rf.err
+
+err.pt.rf <- table(yhat.rf, data_12.test$USREC12)
+
+#TPR = TP/TP+FN (sensitivity)
+(rf.tpr <- err.pt.rf[2,2]/(err.pt.rf[2,2] + err.pt.rf[1,2]))
+
+#TNR = TN/TN + FP
+(rf.tnr <- err.pt.rf[1,1]/(err.pt.rf[1,1] + err.pt.rf[2,1]))
+
+#FPR = FP/FP + TN
+(rf.fpr <- err.pt.rf[2,1] /(err.pt.rf[2,1] + err.pt.rf[1,1]))
+
+#Boosted tree
+boosted.tree.data12 <- gbm(USREC12~.-DATE -USREC -USREC1 -USREC3 -USREC6,
+                         distribution = "gaussian", data = data_12.train,
+                         n.trees = 1000, shrinkage = 0.01)
+summary(boosted.tree.data12)
+
+
+yhat.boost = predict(boosted.tree.data12, newdata = data_12.test,
+                     n.trees=1000, type = "response")
+
+yhat.boost
+yhat.boost = ifelse(yhat.boost > 0.5, 0, 1)
+test.boost.err = 1-mean(yhat.boost != ifelse(data_12.test$USREC12=="Yes",0,1))
+test.boost.err
+```
 
 ## Further Considerations
 

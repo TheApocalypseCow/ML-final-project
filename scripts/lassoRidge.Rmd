@@ -112,7 +112,7 @@ cv.out.ridge.3 <- cv.glmnet(train.recc.standard.3, y.train.3m, alpha=0,folds=5, 
 cv.out.ridge.6 <- cv.glmnet(train.recc.standard.6, y.train.6m, alpha=0,folds=5, family="binomial")
 cv.out.ridge.12 <- cv.glmnet(train.recc.standard.12, y.train.12m, alpha=0,folds=5, family="binomial")
 plot.new()
-plot(cv.out.ridge.1)
+plot(cv.out.ridge.12)
 
 bestlam.1 = cv.out.ridge.1$lambda.min
 bestlam.3 = cv.out.ridge.3$lambda.min

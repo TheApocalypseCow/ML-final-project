@@ -29,6 +29,8 @@ library(gbm)
 library(ROCR)
 library(dplyr)
 
+
+#if running code, set to your local working directory
 setwd("/Users/rohananand/Documents/GitHub/ML-final-project")
 data <- read.csv("data/final_dataset_cleaned.csv")
 
@@ -384,4 +386,4 @@ Time series analysis is indispensable for making informed investment decisions a
 
 The forecasting capabilities of time series models are particularly crucial in financial markets, where accurate predictions of future trends are essential for maximizing returns and minimizing risks. Investors and financial analysts leverage time series analysis to forecast stock prices, assess market volatility, and make data-driven decisions regarding portfolio management.
 
-Our analysis does not consider time series analysis due to complexity and the topics being out of the scope of the class. This is probably one of the biggest faults with our analysis and it explains our lackluster performance results with our models.
+Our analysis does not consider time series analysis due to complexity and the topics being out of the scope of the class. This is probably one of the biggest faults with our analysis and it explains our lackluster performance results with our models. In the future, we could make our analysis better by doing a seasonal time series adjustment on the following predictors: PAYEMS, INPRO, SP500R, HTS, and UNRATE.

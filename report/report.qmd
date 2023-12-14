@@ -241,9 +241,11 @@ text(best_tree12.cv, pretty=0, col = "blue", cex = .5)
 title("Best Tree (of Size 11) for USREC12")
 ```
 
-As you can see above, the tree data structure allows us to easily determine classification of whether a recession is imminent based on the criteria of the predictors. To find the tree with the optimal size for our dataset, we used cross-validation and found the with the best size is 11.
+As you can see above, the tree data structure allows us to easily determine classification of whether a recession is imminent based on the criteria of the predictors. To find the tree with the optimal size for our dataset, we used cross-validation and found the tree with the best size is 11.
 
-**Random Forests**:
+**Random Forests**: In our analysis, we constructed two random forest models employing distinct ensemble techniques: bagging and boosting.
+
+1.  **Bagging Model:** Bagging, short for Bootstrap Aggregating, involves creating multiple subsets of the original dataset through bootstrap sampling and training individual decision trees on each subset. The final prediction is determined by averaging or voting across all trees. Our bagging random forest model demonstrated a False Positive Rate (FPR) of 0.007246 and a True Positive Rate (TPR) of 0.5385, showcasing its balanced performance in classification tasks. Additionally, the test error rate for the bagging model was 1.325%, indicating an overall accuracy of 98.675%. Although our test error rate was very low, we are mostly interested in the TPR (since we want to classify when a recession occurred). Using this metric, our model performed slightly better than random chance. The summary of all the predictors is provided below.
 
 ```{r}
 #USREC12 Random Forest Model
@@ -263,19 +265,22 @@ print(ordered_variables)
 
 yhat.rf = predict(rf.data12, newdata = data_12.test)
 test.rf.err = mean(yhat.rf != data_12.test$USREC12)
-test.rf.err
 
 err.pt.rf <- table(yhat.rf, data_12.test$USREC12)
 
 #TPR = TP/TP+FN (sensitivity)
-(rf.tpr <- err.pt.rf[2,2]/(err.pt.rf[2,2] + err.pt.rf[1,2]))
+rf.tpr <- err.pt.rf[2,2]/(err.pt.rf[2,2] + err.pt.rf[1,2])
 
 #TNR = TN/TN + FP
-(rf.tnr <- err.pt.rf[1,1]/(err.pt.rf[1,1] + err.pt.rf[2,1]))
+rf.tnr <- err.pt.rf[1,1]/(err.pt.rf[1,1] + err.pt.rf[2,1])
 
 #FPR = FP/FP + TN
-(rf.fpr <- err.pt.rf[2,1] /(err.pt.rf[2,1] + err.pt.rf[1,1]))
+rf.fpr <- err.pt.rf[2,1] /(err.pt.rf[2,1] + err.pt.rf[1,1])
+```
 
+2.  **Boosting Model**: In contrast, boosting focuses on sequentially building decision trees, with each subsequent tree giving more weight to misclassified observations from the previous trees. This iterative process aims to improve model accuracy by emphasizing challenging instances. Our boosting random forest model displayed a True Positive Rate (TPR) of 0.5885 and a False Positive Rate 0.0122. The test error rate for the boosting model was notably lower at 0.02649, reflecting a a worse overall accuracy at 97.351%. Again, we are primarily concerned with TPR and our boosting model performed slightly better than the bagging model using that metric. Below is the importance scores of each predictor using our model.
+
+```{r}
 #Boosted tree
 boosted.tree.data12 <- gbm(USREC12~.-DATE -USREC -USREC1 -USREC3 -USREC6,
                          distribution = "gaussian", data = data_12.train,
@@ -286,12 +291,20 @@ summary(boosted.tree.data12)
 yhat.boost = predict(boosted.tree.data12, newdata = data_12.test,
                      n.trees=1000, type = "response")
 
-yhat.boost
 yhat.boost = ifelse(yhat.boost > 0.5, 0, 1)
 test.boost.err = 1-mean(yhat.boost != ifelse(data_12.test$USREC12=="Yes",0,1))
-test.boost.err
 ```
+
+**Neural Networks**: Neural Networks are the current forefront of the machine learning world, their prediction accuracy can even outperform human judgment if given enough data. \"Enough\" unfortunately typically qualifies as around 10,000,000 observations of labeled data, which is much, much larger than our relatively small dataset of 502 observations. Neural networks are very customizable though, they are built on the skeleton of linear regression model, and there is an incredible amount of freedom to play with the many parameters of neural networks, such as hidden layer number, neuron number, learning rate, activation functions, epochs, batch size, etc. 
+
+The basic structure of a neural network as stated previously follows a skeleton of a linear regression model with the large addition of hidden layers. The hidden layer can best be described as a function of a linear combination of predictors, which ultimately are how the model is \"trained\" to perform its prediction. The functions of hidden layers can vary greatly from layer to layer and each function will typically serve to capture some bit of relevant information. 
+
+Our implementation of neural networks utilized tensorflow and keras within a Python script. The initial implementation of the neural network yielded a model that would typically converge to a 0.9143 accuracy rated model with around 0.3 loss for the 12 month model. The 1, 3, and 6 month model would create models of similar performance with .894, .898, and .904 accuracies respectively. 
 
 ## Further Considerations
 
-Mention Time Series Analysis
+Time series analysis is indispensable for making informed investment decisions and managing risk. It serves as a critical tool for identifying trends and patterns within historical stock price data, enabling investors to anticipate market movements and formulate effective trading strategies. By detecting and quantifying seasonal variations and cyclical patterns in stock prices, time series analysis aids in predicting potential fluctuations and understanding market behavior.
+
+The forecasting capabilities of time series models are particularly crucial in financial markets, where accurate predictions of future trends are essential for maximizing returns and minimizing risks. Investors and financial analysts leverage time series analysis to forecast stock prices, assess market volatility, and make data-driven decisions regarding portfolio management.
+
+Our analysis does not consider time series analysis due to complexity and the topics being out of the scope of the class. This is probably one of the biggest faults with our analysis and it explains our lackluster performance results with our models.

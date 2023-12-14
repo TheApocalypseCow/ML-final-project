@@ -31,8 +31,8 @@ library(tidyr)
 library(gbm)
 ```
 ```{r}
-setwd("C:/Users/cobyw/OneDrive/Documents/PSTAT131/final/data")
-data.raw <- read.csv("FINAL _RECESSION_PREDICTION.csv")
+setwd("/Users/rohananand/Documents/GitHub/ML-final-project")
+data.raw <- read.csv("data/final_dataset_cleaned.csv")
 glimpse(data.raw)
 ```
 ```{r}
@@ -203,7 +203,7 @@ cv.out.lasso.3 = cv.glmnet(train.recc.standard.3, y.train.3m, alpha = 1, family 
 cv.out.lasso.6 = cv.glmnet(train.recc.standard.6, y.train.6m, alpha = 1, family = "binomial")
 cv.out.lasso.12 = cv.glmnet(train.recc.standard.12, y.train.12m, alpha = 1, family = "binomial")
 
-plot(cv.out.lasso)
+plot(cv.out.lasso.12)
 abline(v = log(cv.out.lasso.1$lambda.min), col="red", lwd=3, lty=2)
 bestlam.1 = cv.out.lasso.1$lambda.min
 bestlam.3 = cv.out.lasso.3$lambda.min

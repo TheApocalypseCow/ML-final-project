@@ -301,6 +301,17 @@ The basic structure of a neural network as stated previously follows a skeleton 
 
 Our implementation of neural networks utilized tensorflow and keras within a Python script. The initial implementation of the neural network yielded a model that would typically converge to a 0.9143 accuracy rated model with around 0.3 loss for the 12 month model. The 1, 3, and 6 month model would create models of similar performance with .894, .898, and .904 accuracies respectively. 
 
+Because the 12 month model seemed to perform the best the rest of the analysis will be done solely using the 12 month model. This was however using the entire dataset to train the model with zero validation or testing done. Knowing the importance of having as much data as possible for neural networks, we decided to avoid splitting the data further in training, validation and testing sets. Instead we decided trying to estimate the accuracy of the model using cross validation would be a more apt approach. To account for the unbalanced nature of the dataset we opted to use stratified cross validation. \
+The performance of the model was significantly less impressive when looking at its cross validated performance. Using the metric of ROC AUC the model on average scored around a 0.45 score. 
+
+**Parameter Choice and Reasoning**:
+
+To choose most of the parameters it was really just a task of trial and error. We ended up using 3 hidden layers with 6, 6, and 3 neurons respectively. We noticed significant performance decreases when increasing or decreasing these numbers at large extents, but performance would stay consistent within this range. 
+
+**Conclusion**: Overall the neural network did not quite live up to its legendary level of performance, but most likely for very good reason. Our data size was just too small, this causes issues for any machine learning algorithms, but neural networks can be especially dependent on having ample data. So the performance ended up being around a 0.45 ROC AUC score for the highest performing model.
+
+**Overall Project Takeaway**: After considering the generalization performance of all the models implemented, our boosting Random Model performed the best using the via TPR and accuracy.
+
 ## Further Considerations
 
 Time series analysis is indispensable for making informed investment decisions and managing risk. It serves as a critical tool for identifying trends and patterns within historical stock price data, enabling investors to anticipate market movements and formulate effective trading strategies. By detecting and quantifying seasonal variations and cyclical patterns in stock prices, time series analysis aids in predicting potential fluctuations and understanding market behavior.

@@ -9,7 +9,7 @@
 <meta name="author" content="Rohan Anand, Coby Wilcox">
 <meta name="dcterms.date" content="2023-12-13">
 
-<title>Machine Learning Final Project</title>
+<title>PSTAT131: Machine Learning Final Project</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -50,7 +50,7 @@ ul.task-list li input[type="checkbox"] {
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">Machine Learning Final Project</h1>
+<h1 class="title">PSTAT131: Machine Learning Final Project</h1>
 </div>
 
 
@@ -220,6 +220,7 @@ ul.task-list li input[type="checkbox"] {
 <p><img src="report_files/figure-html/unnamed-chunk-12-1.png" class="img-fluid" width="672"></p>
 </div>
 </div>
+<p>As you can see, CPIAI has the most positive correlation with the other factors. It seems that the SP500R predictor has very little to no correlation with any of the other factors.</p>
 </section>
 <section id="results" class="level2">
 <h2 class="anchored" data-anchor-id="results">Results</h2>
@@ -256,10 +257,33 @@ AIC: 175.08
 Number of Fisher Scoring iterations: 8</code></pre>
 </div>
 </div>
-<p><strong>Decision Trees:</strong> We start off by constructing the most basic building block of a random forest: the decision tree. The primary advantage of decision trees is its high interpretability. The decision tree systematically partitions the dataset of economic indicators based on feature values to create a predictive model, recursively splitting the data into subsets by identifying the most informative features at each node, leading to a tree-like structure that represents decision rules for classifying or predicting outcomes.</p>
-<div class="cell" data-hash="report_cache/html/unnamed-chunk-14_366aa823bce7baee529dd4238b8c514e">
+<p><strong>Regularization Methods</strong>: Lasso and Ridge regression are both a form of "regularization" machine learning methods. Regularization refers to their method of pushing ordinary least squares coefficients towards zero to achieve typically more interpretable and accurate results. To achieve this regularization the methods attach a shrinkage penalty to the least squares estimate consisting of tuning parameter ג, and either a l2 norm squared or l1 norm.&nbsp;</p>
+<ol type="1">
+<li><strong>Ridge Regression</strong>: The performance of the ridge model was unimpressive; while the accuracy ratings were all quite high around the 95% mark, the true marker of a good model for our problem must include good sensitivity. None of the ridge models beat a 0.3 sensitivity rating even in the training sets. The poor performance of the ridge model I think may be attributed to the quality of some of the predictors being mixed. In other papers on forecasting economic recessions, it seems a few predictors tend to come out on top very consistently like the T10Y3M and HTS, while others like SP500R and RGDP can be inconsistent. So Ridge’s style of utilizing all of the predictors in a somewhat balanced fashion to create coefficients may not be well suited to this dataset.<br>
+</li>
+</ol>
+<div class="cell" data-hash="report_cache/html/unnamed-chunk-14_4a2f598d59fdbf2f17afc37466cecd10">
 <div class="cell-output-display">
 <p><img src="report_files/figure-html/unnamed-chunk-14-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+<ol start="2" type="1">
+<li><strong>Lasso Regression</strong>: Lasso's performance seemed to be a massive improvement compared to ridge. Similar testing to the ridge model yielded multiple models with over 0.60 test sensitivity ratings for models predicting recessions within the next month or next year. A 60% sensitivity may not sound amazing, but with such heavy impact events like economic recessions, a 60% certainty of one occurring within a month could be of incredible use to some individuals or companies. Another result of the LASSO models worth looking into is their subset selection. By the nature of how LASSO coefficients are calculated some coefficients will become zero and essentially be subsetted out of the model. LASSO subsetting is somewhat close to "best subset selection" so seeing what is and is not subsetted out of the model can be very revealing to predictor importance.&nbsp;</li>
+</ol>
+<div class="cell" data-hash="report_cache/html/unnamed-chunk-15_d3c0ce6aa7a14de728d8c0bc1744d725">
+<div class="cell-output-display">
+<p><img src="report_files/figure-html/unnamed-chunk-15-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+<p>Using the two best performing models 1 month and 12 month, we then created full models utilizing the entire dataset and then looked at the resulting coefficients estimates. Some of most interesting observations are that:</p>
+<ol type="1">
+<li>HTS was in both cases the highest weighted coefficient in the model suggesting a very solid correlation between Heavy Truck Sales and recessions.</li>
+<li>T10Y3M while never being subsetted out fully was in both cases given one of the lowest coefficient weights somewhat contradicting previous results in recession forecasting.</li>
+</ol>
+<p><strong>Decision Trees:</strong> We start off by constructing the most basic building block of a random forest: the decision tree. The primary advantage of decision trees is its high interpretability. The decision tree systematically partitions the dataset of economic indicators based on feature values to create a predictive model, recursively splitting the data into subsets by identifying the most informative features at each node, leading to a tree-like structure that represents decision rules for classifying or predicting outcomes.</p>
+<div class="cell" data-hash="report_cache/html/unnamed-chunk-16_7cc340f24e167338ede5d933f4e90c96">
+<div class="cell-output-display">
+<p><img src="report_files/figure-html/unnamed-chunk-16-1.png" class="img-fluid" width="672"></p>
 </div>
 </div>
 <p>As you can see above, the tree data structure allows us to easily determine classification of whether a recession is imminent based on the criteria of the predictors. To find the tree with the optimal size for our dataset, we used cross-validation and found the tree with the best size is 11.</p>
@@ -267,7 +291,7 @@ Number of Fisher Scoring iterations: 8</code></pre>
 <ol type="1">
 <li><strong>Bagging Model:</strong> Bagging, short for Bootstrap Aggregating, involves creating multiple subsets of the original dataset through bootstrap sampling and training individual decision trees on each subset. The final prediction is determined by averaging or voting across all trees. Our bagging random forest model demonstrated a False Positive Rate (FPR) of 0.007246 and a True Positive Rate (TPR) of 0.5385, showcasing its balanced performance in classification tasks. Additionally, the test error rate for the bagging model was 1.325%, indicating an overall accuracy of 98.675%. Although our test error rate was very low, we are mostly interested in the TPR (since we want to classify when a recession occurred). Using this metric, our model performed slightly better than random chance. The summary of all the predictors is provided below.</li>
 </ol>
-<div class="cell" data-hash="report_cache/html/unnamed-chunk-15_2f5d72c08102685ea3c5f982d2ce5b86">
+<div class="cell" data-hash="report_cache/html/unnamed-chunk-17_0a3d3cb74ed8dd8b8958556730e505d3">
 <div class="cell-output cell-output-stdout">
 <pre><code>                No       Yes MeanDecreaseAccuracy MeanDecreaseGini
 CPIAI  19.79604777  9.897498           21.0197141         8.303525
@@ -283,11 +307,11 @@ SP500R  0.04413438  1.569018            0.5517998         1.759758</code></pre>
 </div>
 </div>
 <ol start="2" type="1">
-<li><strong>Boosting Model</strong>: In contrast, boosting focuses on sequentially building decision trees, with each subsequent tree giving more weight to misclassified observations from the previous trees. This iterative process aims to improve model accuracy by emphasizing challenging instances. Our boosting random forest model displayed a True Positive Rate (TPR) of 0.5885 and a False Positive Rate 0.0122. The test error rate for the boosting model was notably lower at 0.02649, reflecting a a worse overall accuracy at 97.351%. Again, we are primarily concerned with TPR and our boosting model performed slightly better than the bagging model using that metric. Below is the importance scores of each predictor using our model.</li>
+<li><strong>Boosting Model</strong>: In contrast, boosting focuses on sequentially building decision trees, with each subsequent tree giving more weight to misclassified observations from the previous trees. This iterative process aims to improve model accuracy by emphasizing challenging instances. Our boosting random forest model displayed a True Positive Rate (TPR) of 0.6185 and a False Positive Rate 0.0122. The test error rate for the boosting model was notably lower at 0.02649, reflecting a a worse overall accuracy at 97.351%. Again, we are primarily concerned with TPR and our boosting model performed slightly better than the bagging model using that metric. Below is the importance scores of each predictor using our model.</li>
 </ol>
-<div class="cell" data-hash="report_cache/html/unnamed-chunk-16_bef664e721c20a68fee51dcd854a480d">
+<div class="cell" data-hash="report_cache/html/unnamed-chunk-18_910dc372722a4f5431750f7f1c1422a3">
 <div class="cell-output-display">
-<p><img src="report_files/figure-html/unnamed-chunk-16-1.png" class="img-fluid" width="672"></p>
+<p><img src="report_files/figure-html/unnamed-chunk-18-1.png" class="img-fluid" width="672"></p>
 </div>
 <div class="cell-output cell-output-stdout">
 <pre><code>          var    rel.inf
@@ -306,6 +330,12 @@ CORP     CORP  0.7586428</code></pre>
 <p><strong>Neural Networks</strong>: Neural Networks are the current forefront of the machine learning world, their prediction accuracy can even outperform human judgment if given enough data. "Enough" unfortunately typically qualifies as around 10,000,000 observations of labeled data, which is much, much larger than our relatively small dataset of 502 observations. Neural networks are very customizable though, they are built on the skeleton of linear regression model, and there is an incredible amount of freedom to play with the many parameters of neural networks, such as hidden layer number, neuron number, learning rate, activation functions, epochs, batch size, etc.&nbsp;</p>
 <p>The basic structure of a neural network as stated previously follows a skeleton of a linear regression model with the large addition of hidden layers. The hidden layer can best be described as a function of a linear combination of predictors, which ultimately are how the model is "trained" to perform its prediction. The functions of hidden layers can vary greatly from layer to layer and each function will typically serve to capture some bit of relevant information.&nbsp;</p>
 <p>Our implementation of neural networks utilized tensorflow and keras within a Python script. The initial implementation of the neural network yielded a model that would typically converge to a 0.9143 accuracy rated model with around 0.3 loss for the 12 month model. The 1, 3, and 6 month model would create models of similar performance with .894, .898, and .904 accuracies respectively.&nbsp;</p>
+<p>Because the 12 month model seemed to perform the best the rest of the analysis will be done solely using the 12 month model. This was however using the entire dataset to train the model with zero validation or testing done. Knowing the importance of having as much data as possible for neural networks, we decided to avoid splitting the data further in training, validation and testing sets. Instead we decided trying to estimate the accuracy of the model using cross validation would be a more apt approach. To account for the unbalanced nature of the dataset we opted to use stratified cross validation.&nbsp;<br>
+The performance of the model was significantly less impressive when looking at its cross validated performance. Using the metric of ROC AUC the model on average scored around a 0.45 score.&nbsp;</p>
+<p><strong>Parameter Choice and Reasoning</strong>:</p>
+<p>To choose most of the parameters it was really just a task of trial and error. We ended up using 3 hidden layers with 6, 6, and 3 neurons respectively. We noticed significant performance decreases when increasing or decreasing these numbers at large extents, but performance would stay consistent within this range.&nbsp;</p>
+<p><strong>Conclusion</strong>:&nbsp;Overall the neural network did not quite live up to its legendary level of performance, but most likely for very good reason. Our data size was just too small, this causes issues for any machine learning algorithms, but neural networks can be especially dependent on having ample data. So the performance ended up being around a 0.45 ROC AUC score for the highest performing model.</p>
+<p><strong>Overall Project Takeaway</strong>: After considering the generalization performance of all the models implemented, our boosting Random Forest Model performed the best via TPR and accuracy.</p>
 </section>
 <section id="further-considerations" class="level2">
 <h2 class="anchored" data-anchor-id="further-considerations">Further Considerations</h2>

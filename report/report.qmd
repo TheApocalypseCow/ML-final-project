@@ -1,5 +1,5 @@
 ---
-title: "Machine Learning Final Project"
+title: "PSTAT131: Machine Learning Final Project"
 subtitle: ""
 author: "Rohan Anand, Coby Wilcox"
 date: last-modified
@@ -196,6 +196,8 @@ correlation_matrix <- cor(dateless_data)
 ggcorrplot(correlation_matrix, type = "lower", outline.col = "white")
 ```
 
+As you can see, CPIAI has the most positive correlation with the other factors. It seems that the SP500R predictor has very little to no correlation with any of the other factors.
+
 ## Results 
 
 **Logistic Regression:** We implement a logistic regression as a benchmark method. In general, a logistic regression may struggle in predicting recessions due to its linear assumptions, limited ability to capture the complex and nonlinear relationships inherent in economic data, challenges with feature independence and changing feature importance over time, sensitivity to non-stationarity in economic variables, potential bias in handling imbalanced data where recessions are infrequent, and the difficulty in satisfying model assumptions. Additionally, logistic regression may not account for unobserved external factors influencing recessions, and its performance can be hindered by noisy or error-prone economic data. To improve recession prediction, we consider more sophisticated modeling approaches. The summary statistics for the logistic regression model implemented are below. Note that the logistic regression is able to pick up the majority of the important predictors.
@@ -225,6 +227,70 @@ data <- data %>%
 logistic_data_12 <- glm(USREC12~ .-DATE -USREC -USREC1 -USREC3 -USREC6,data=data,family = "binomial")
 summary(logistic_data_12)
 ```
+
+**Regularization Methods**: Lasso and Ridge regression are both a form of \"regularization\" machine learning methods. Regularization refers to their method of pushing ordinary least squares coefficients towards zero to achieve typically more interpretable and accurate results. To achieve this regularization the methods attach a shrinkage penalty to the least squares estimate consisting of tuning parameter ג, and either a l2 norm squared or l1 norm. 
+
+1.  **Ridge Regression**: The performance of the ridge model was unimpressive; while the accuracy ratings were all quite high around the 95% mark, the true marker of a good model for our problem must include good sensitivity. None of the ridge models beat a 0.3 sensitivity rating even in the training sets. The poor performance of the ridge model I think may be attributed to the quality of some of the predictors being mixed. In other papers on forecasting economic recessions, it seems a few predictors tend to come out on top very consistently like the T10Y3M and HTS, while others like SP500R and RGDP can be inconsistent. So Ridge's style of utilizing all of the predictors in a somewhat balanced fashion to create coefficients may not be well suited to this dataset.\
+
+```{r}
+setwd("/Users/rohananand/Documents/GitHub/ML-final-project")
+data.raw <- read.csv("data/final_dataset_cleaned.csv")
+
+set.seed(333)
+cols = c("USREC","USREC1","USREC3","USREC6","USREC12")
+data.raw[cols] <- lapply(data.raw[cols], factor) # converts the last four columns to factors
+
+# creating training and test data
+
+test = sample(1:nrow(data.raw), 102)
+test.recc = data.raw[test,]
+train.recc = data.raw[-test,]
+train.recc[cols] <- lapply(train.recc[cols], factor)
+
+x.train = train.recc[2:11]
+
+x.test = test.recc[2:11]
+y.test.1m = test.recc["USREC1"]
+y.test.3m = test.recc["USREC3"]
+y.test.6m = test.recc["USREC6"]
+y.test.12m = test.recc["USREC12"]
+
+standard.data <- data.raw %>% mutate_at(c(4,5,6,7,10), ~(scale(.) %>% as.vector))
+matrix.data.12 <- model.matrix(USREC12~.-DATE-USREC-USREC3-USREC6-USREC1, standard.data)
+
+test.recc.standard.12 = matrix.data.12[test,]
+train.recc.standard.12 = matrix.data.12[-test,]
+
+y.train.12m = train.recc$USREC12
+
+#x.test.standard = test.recc.standard[2:11]
+
+y.test.12m = test.recc$USREC12
+
+lambda.list.ridge = 1000 * exp(seq(0, log(1e-5), length = 100))
+
+ridge_model_12 <- glmnet(train.recc.standard.12, y.train.12m, alpha=0, lamda=lambda.list.ridge, family = "binomial")
+
+cv.out.ridge.12 <- cv.glmnet(train.recc.standard.12, y.train.12m, alpha=0,folds=5, family="binomial")
+plot.new()
+plot(cv.out.ridge.12)
+```
+
+2.  **Lasso Regression**: Lasso\'s performance seemed to be a massive improvement compared to ridge. Similar testing to the ridge model yielded multiple models with over 0.60 test sensitivity ratings for models predicting recessions within the next month or next year. A 60% sensitivity may not sound amazing, but with such heavy impact events like economic recessions, a 60% certainty of one occurring within a month could be of incredible use to some individuals or companies. Another result of the LASSO models worth looking into is their subset selection. By the nature of how LASSO coefficients are calculated some coefficients will become zero and essentially be subsetted out of the model. LASSO subsetting is somewhat close to \"best subset selection\" so seeing what is and is not subsetted out of the model can be very revealing to predictor importance. 
+
+```{r}
+lasso_model_12 <- glmnet(train.recc.standard.12, y.train.12m, alpha=1,lamda=lambda.list.ridge, family = "binomial")
+
+cv.out.lasso.12 = cv.glmnet(train.recc.standard.12, y.train.12m, alpha = 1, family = "binomial")
+
+plot(cv.out.lasso.12)
+abline(v = log(cv.out.lasso.12$lambda.min), col="red", lwd=3, lty=2)
+```
+
+Using the two best performing models 1 month and 12 month, we then created full models utilizing the entire dataset and then looked at the resulting coefficients estimates. Some of most interesting observations are that:
+
+1.  HTS was in both cases the highest weighted coefficient in the model suggesting a very solid correlation between Heavy Truck Sales and recessions.
+2.  T10Y3M while never being subsetted out fully was in both cases given one of the lowest coefficient weights somewhat contradicting previous results in recession forecasting.
 
 **Decision Trees:** We start off by constructing the most basic building block of a random forest: the decision tree. The primary advantage of decision trees is its high interpretability. The decision tree systematically partitions the dataset of economic indicators based on feature values to create a predictive model, recursively splitting the data into subsets by identifying the most informative features at each node, leading to a tree-like structure that represents decision rules for classifying or predicting outcomes.
 
@@ -278,7 +344,7 @@ rf.tnr <- err.pt.rf[1,1]/(err.pt.rf[1,1] + err.pt.rf[2,1])
 rf.fpr <- err.pt.rf[2,1] /(err.pt.rf[2,1] + err.pt.rf[1,1])
 ```
 
-2.  **Boosting Model**: In contrast, boosting focuses on sequentially building decision trees, with each subsequent tree giving more weight to misclassified observations from the previous trees. This iterative process aims to improve model accuracy by emphasizing challenging instances. Our boosting random forest model displayed a True Positive Rate (TPR) of 0.5885 and a False Positive Rate 0.0122. The test error rate for the boosting model was notably lower at 0.02649, reflecting a a worse overall accuracy at 97.351%. Again, we are primarily concerned with TPR and our boosting model performed slightly better than the bagging model using that metric. Below is the importance scores of each predictor using our model.
+2.  **Boosting Model**: In contrast, boosting focuses on sequentially building decision trees, with each subsequent tree giving more weight to misclassified observations from the previous trees. This iterative process aims to improve model accuracy by emphasizing challenging instances. Our boosting random forest model displayed a True Positive Rate (TPR) of 0.6185 and a False Positive Rate 0.0122. The test error rate for the boosting model was notably lower at 0.02649, reflecting a a worse overall accuracy at 97.351%. Again, we are primarily concerned with TPR and our boosting model performed slightly better than the bagging model using that metric. Below is the importance scores of each predictor using our model.
 
 ```{r}
 #Boosted tree
@@ -310,7 +376,7 @@ To choose most of the parameters it was really just a task of trial and error. W
 
 **Conclusion**: Overall the neural network did not quite live up to its legendary level of performance, but most likely for very good reason. Our data size was just too small, this causes issues for any machine learning algorithms, but neural networks can be especially dependent on having ample data. So the performance ended up being around a 0.45 ROC AUC score for the highest performing model.
 
-**Overall Project Takeaway**: After considering the generalization performance of all the models implemented, our boosting Random Model performed the best using the via TPR and accuracy.
+**Overall Project Takeaway**: After considering the generalization performance of all the models implemented, our boosting Random Forest Model performed the best via TPR and accuracy.
 
 ## Further Considerations
 
